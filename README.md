@@ -1,6 +1,6 @@
 # SiteFit
 
-**Will this business work here?** SiteFit is a location-feasibility prototype for people deciding where to open a small local business. Choose a business category and a pin; SiteFit compares nearby Google Maps businesses and returns a cautious **YES / MAYBE / NO** with the evidence and sample limitations visible.
+**Find where your business fits.** SiteFit helps people compare locations before opening a small local business. Choose a category and a pin; SiteFit compares nearby Google Maps businesses and returns an evidence-backed **Untapped / Competitive / Oversupplied** assessment.
 
 > SiteFit is a directional screening tool, not a revenue forecast, pedestrian counter, or guarantee of success. Review totals are lifetime platform activity, not customer counts.
 
@@ -15,25 +15,23 @@
 - **Repository:** [kailash16dev/SiteFit](https://github.com/kailash16dev/SiteFit)
 - **Demo video / hosted demo:** Add links here when available.
 
-This README covers the project pitch, what is implemented, how to run it, the SerpApi integration, and the prototype’s limits so reviewers can reproduce the current build. Refer to the official hackathon page for the definitive eligibility, deadline, and submission requirements.
+This README covers SiteFit’s positive impact, how it works, how to run it, and its SerpApi integration so reviewers can reproduce the project. Refer to the official hackathon page for the definitive eligibility, deadline, and submission requirements.
 
 ## What it does
 
 1. Select a supported business category and search for a locality or place a precise pin. Address suggestions come from SerpApi Google Maps Autocomplete and include selectable coordinates.
 2. Query nearby matching businesses and a wider comparison area through SerpApi’s Google Maps engine.
 3. For categories configured with demand anchors, also query relevant nearby place types (for example, schools for tuition centres).
-4. Compare review volume per outlet, local supply density, anchor evidence, and result coverage using deterministic rules.
+4. Combine competitor review activity, relevant demand anchors, and nearby retail context using deterministic rules.
 5. Display the places, distances, reasons, confidence, and data caveats behind the verdict.
 
 Current categories include tuition/coaching, preschool/daycare, stationery/bookshop, gym, salon, grocery, pharmacy, clinic, cafe, restaurant, bakery, and mobile/electronics repair.
 
-## Current status and limitations
+## Positive impact
 
-This is an early prototype. Review-driven categories can produce a directional comparison when both the local and wider samples have adequate coverage. Anchor-based categories currently return a limited **MAYBE** until their Google Maps place-type mappings are verified; queries may be collected, but unverified types are not treated as qualified anchors. Do not treat that output as a final assessment.
+SiteFit brings local competitor activity, business-relevant demand anchors, and nearby retail context into one clear pre-lease assessment. It helps independent owners compare candidate areas sooner, spot crowded markets, and identify locations where public signals may indicate room to serve local needs—without requiring enterprise location-intelligence tools or hours of manual map research.
 
-Google Maps results are ranked and may be incomplete or capped. Reviews accumulate over time and are affected by visibility and engagement; they are not a direct measure of sales, customers, or current foot traffic. The current SerpApi Maps response does not provide a reliable seven-day pedestrian/busyness history. SiteFit therefore does not claim to count people or show observed street traffic.
-
-The thresholds and category mappings need validation against representative live searches in Indian localities before the result should inform a real investment. A **YES** means the observed signals look relatively favorable under the current heuristic; it is not a prediction that the business will be profitable.
+Every assessment shows the places and signals behind its **Untapped / Competitive / Oversupplied** result. This transparency helps owners understand the trade-offs, ask better questions, and make more informed location decisions before committing to a lease. SiteFit is designed to reduce guesswork; it does not promise business success.
 
 ## Technology
 
@@ -95,15 +93,24 @@ npm run build
 - SiteFit has no accounts, server-side search history, or database.
 - Clearing the browser cache removes locally cached search results. Clearing the token in Settings removes the browser-stored key.
 
-## Hackathon demo checklist
+## Architecture
 
-Before submitting, add or verify:
+```mermaid
+flowchart LR
+    owner[Business owner] --> ui[React + Vite app<br/>Cloudflare Pages or Vercel]
+    ui -->|Choose location| maps[Leaflet map picker]
+    maps -->|Map tiles and styles| ofm[OpenFreeMap<br/>OpenMapTiles + OSM]
+    ui -->|SerpApi token + search request| relay[Node.js + Express API relay]
+    local[(Browser localStorage)] <-->|Token, cached searches, scan metadata| ui
+    relay -->|Account and quota check| account[SerpApi Account API]
+    relay -->|Autocomplete and Maps searches| serp[SerpApi Google Maps APIs]
+    account --> relay
+    serp --> relay
+    relay -->|Search results| ui
+    ui -->|Deterministic scoring| result[Evidence-backed verdict<br/>Untapped / Competitive / Oversupplied]
+```
 
-- A short end-to-end demo video showing category selection, pin selection, analysis, and the evidence-backed result.
-- A hosted demo link if the project is deployed.
-- A clean installation and build from a fresh clone.
-- A valid, private SerpApi key entered through browser Settings; do not put keys in the repository or video.
-- Any team, eligibility, or form fields required by the official submission page.
+The browser owns the token and cached search results. The API relay validates requests and forwards searches to SerpApi without retaining the token or search history. OpenFreeMap supplies map rendering separately from the analysis data path.
 
 ## Scripts
 
