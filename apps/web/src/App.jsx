@@ -64,6 +64,10 @@ export default function App() {
     return () => document.removeEventListener('pointerdown', closeOnOutsideClick);
   }, []);
 
+  useEffect(() => {
+    if (page === 'verdict') window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [page]);
+
   const lookupAddress = async () => {
     clearTimeout(addressTimerRef.current);
     if (address.trim().length < 3) return;
