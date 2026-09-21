@@ -25,7 +25,7 @@ This README covers the project pitch, what is implemented, how to run it, the Se
 4. Compare review volume per outlet, local supply density, anchor evidence, and result coverage using deterministic rules.
 5. Display the places, distances, reasons, confidence, and data caveats behind the verdict.
 
-Current categories include tuition/coaching, preschool/daycare, stationery/bookshop, gym, salon, grocery, pharmacy, clinic, café, restaurant, bakery, and mobile/electronics repair.
+Current categories include tuition/coaching, preschool/daycare, stationery/bookshop, gym, salon, grocery, pharmacy, clinic, cafe, restaurant, bakery, and mobile/electronics repair.
 
 ## Current status and limitations
 
@@ -37,11 +37,11 @@ The thresholds and category mappings need validation against representative live
 
 ## Technology
 
-- **Frontend:** React 19, Vite, Leaflet, Lucide icons
-- **API relay:** Node.js, Express, Zod, Helmet, CORS, dotenv
+- **Frontend:** React 19, Vite, Leaflet with MapLibre GL, Lucide icons
+- **API relay:** Node.js, Express, Zod, Helmet, CORS
 - **Business data and account limits:** SerpApi Google Maps and Account API
 - **Address suggestions:** SerpApi Google Maps Autocomplete API (`engine=google_maps_autocomplete`)
-- **Map tiles:** OpenStreetMap
+- **Map tiles:** OpenFreeMap styles with OpenStreetMap data
 - **Persistence:** Browser localStorage for the user-entered key, search cache, and local scan metadata; no user account or application database
 - **AI:** No LLM is used. Verdicts are computed by deterministic, inspectable rules.
 
@@ -60,14 +60,9 @@ The small Node.js relay keeps the SerpApi call out of the browser’s cross-orig
 git clone https://github.com/kailash16dev/SiteFit.git
 cd SiteFit
 npm install
-cp apps/api/.env.example apps/api/.env
 ```
 
-Set `WEB_ORIGIN=http://localhost:5173` in `apps/api/.env`, then choose one of these local testing options:
-
-**Option A — local server key (convenient for this development machine):** Set `SERPAPI_API_KEY` in `apps/api/.env`. The key is read only by the Node API in non-production mode. The frontend receives only a boolean indicating that a local key is configured; the key itself is never sent to the browser. A key supplied in the browser’s Settings takes precedence.
-
-**Option B — browser-provided key:** Leave `SERPAPI_API_KEY` blank, start the app, enter your own key in **Settings**, and save it. It is stored in that browser’s localStorage and sent to the relay per request.
+Start the app and enter your SerpApi key in **Settings**. It is stored in that browser’s localStorage and sent to the API relay per request; the relay does not retain it. The frontend and API use local development defaults for their ports and allowed origin.
 
 Start both apps from the repository root:
 
@@ -75,7 +70,7 @@ Start both apps from the repository root:
 npm run dev
 ```
 
-Open <http://localhost:5173>. The API listens on <http://localhost:8787>; Vite proxies `/api` requests to it. The API’s local-server-key fallback is disabled when `NODE_ENV=production`.
+Open <http://localhost:5173>. The API listens on <http://localhost:8787>; Vite proxies `/api` requests to it. Every SerpApi request requires the browser token.
 
 To build and check the project:
 
@@ -94,9 +89,9 @@ npm run build
 
 ## Privacy and key handling
 
-- Never commit `.env`, a real SerpApi key, or a key in frontend source.
-- `.env` and `.env.*` are ignored; `.env.example` is safe to commit and contains no real key.
-- The local server key is a development convenience only. Do not set it in a deployed environment; production requests must provide a user key in the request header.
+- Never commit a real SerpApi key or place it in frontend source.
+- The SerpApi key is entered in Settings, stored in browser localStorage, and sent in the request header only when the user requests a search.
+- The API relay does not save keys or search requests.
 - SiteFit has no accounts, server-side search history, or database.
 - Clearing the browser cache removes locally cached search results. Clearing the token in Settings removes the browser-stored key.
 
@@ -107,7 +102,7 @@ Before submitting, add or verify:
 - A short end-to-end demo video showing category selection, pin selection, analysis, and the evidence-backed result.
 - A hosted demo link if the project is deployed.
 - A clean installation and build from a fresh clone.
-- A valid, private SerpApi key supplied through a local environment or browser Settings; do not put keys in the repository or video.
+- A valid, private SerpApi key entered through browser Settings; do not put keys in the repository or video.
 - Any team, eligibility, or form fields required by the official submission page.
 
 ## Scripts

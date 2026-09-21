@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -15,8 +14,7 @@ app.use(express.json({ limit: '16kb' }));
 
 const tokenFrom = req => {
   const token = req.get('X-Serpapi-Token')?.trim();
-  if (token && token.length <= 256) return token;
-  return process.env.NODE_ENV !== 'production' ? process.env.SERPAPI_API_KEY?.trim() || null : null;
+  return token && token.length <= 256 ? token : null;
 };
 const fail = (res, status, code, message) => res.status(status).json({ error: { code, message } });
 const mapsSchema = z.object({
@@ -118,8 +116,6 @@ async function serializeByToken(token, task) {
 }
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
-app.get('/api/v1/config', (_req, res) => res.json({ localServerKeyConfigured: process.env.NODE_ENV !== 'production' && Boolean(process.env.SERPAPI_API_KEY?.trim()) }));
-
 app.post('/api/v1/maps/batch', async (req, res) => {
   const token = tokenFrom(req);
   if (!token) return fail(res, 401, 'TOKEN_REQUIRED', 'Add a valid SerpApi token in Settings.');

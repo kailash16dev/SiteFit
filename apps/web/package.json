@@ -3,7 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "vite --host 0.0.0.0", "build": "vite build" },
-  "dependencies": { "@vitejs/plugin-react": "^5.0.2", "leaflet": "^1.9.4", "lucide-react": "^0.468.0", "react": "^19.1.1", "react-dom": "^19.1.1" },
-  "devDependencies": { "vite": "^7.1.5" }
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "test": "node --test src/lib/*.test.js && node scripts/verdict-ssr-smoke.mjs"
+  },
+  "dependencies": {
+    "@maplibre/maplibre-gl-leaflet": "^0.1.4",
+    "@vitejs/plugin-react": "^5.0.2",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.468.0",
+    "maplibre-gl": "^6.10.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "vite": "^7.1.5"
+  }
 }
