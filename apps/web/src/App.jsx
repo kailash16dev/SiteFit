@@ -68,6 +68,22 @@ export default function App() {
     if (page === 'verdict') window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [page]);
 
+  useEffect(() => {
+    if (page === 'how') {
+      document.title = 'How it Works — SiteFit';
+    } else if (page === 'settings') {
+      document.title = 'Settings — SiteFit';
+    } else if (page === 'loading') {
+      document.title = category ? `Analyzing ${category.label}… — SiteFit` : 'Analyzing site… — SiteFit';
+    } else if (page === 'verdict' && scan) {
+      const verdictLabel = scan.verdict?.label || 'Verdict';
+      const categoryLabel = scan.category?.label || 'Business';
+      document.title = `${verdictLabel} · ${categoryLabel} — SiteFit`;
+    } else {
+      document.title = 'SiteFit — Know before you open';
+    }
+  }, [page, category, scan]);
+
   const lookupAddress = async () => {
     clearTimeout(addressTimerRef.current);
     if (address.trim().length < 3) return;

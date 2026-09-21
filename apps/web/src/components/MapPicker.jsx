@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, RotateCcw, Sun, Moon, Crosshair } from 'lucide-react';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { maplibreGL } from '@maplibre/maplibre-gl-leaflet';
 import { setWorkerUrl } from 'maplibre-gl';
 import mapLibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
@@ -22,8 +23,27 @@ export default function MapPicker({ point, onChange, onClose }) {
   const ringsRef = useRef([]);
   const mapLayerRef = useRef(null);
   const placePinRef = useRef(null);
+  const ensurePinRef = useRef(null);
   const startPointRef = useRef(null);
   const [theme, setTheme] = useState('bright');
+  const prevThemeRef = useRef(theme);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  const toLatLng = val => {
+    if (!val) return null;
+    if (Array.isArray(val) && val.length >= 2) {
+      const lat = Number(val[0]);
+      const lon = Number(val[1]);
+      return Number.isFinite(lat) && Number.isFinite(lon) ? L.latLng(lat, lon) : null;
+    }
+    if (typeof val === 'object') {
+      const lat = Number(val.lat);
+      const lon = Number(val.lng ?? val.lon);
+      return Number.isFinite(lat) && Number.isFinite(lon) ? L.latLng(lat, lon) : null;
+    }
+    return null;
+  };
 
   useEffect(() => {
     if (!host.current || mapRef.current) return;
@@ -34,7 +54,9 @@ export default function MapPicker({ point, onChange, onClose }) {
       .setView([initial.lat, initial.lon], 12);
     const styleLayer = maplibreGL({ style: MAP_STYLES.bright }).addTo(map);
 
-    const ensurePin = latlng => {
+    const ensurePin = raw => {
+      const latlng = toLatLng(raw);
+      if (!latlng) return;
       if (!markerRef.current) {
         const icon = L.divIcon({
           className: 'sitefit-pin-wrap',
@@ -44,10 +66,11 @@ export default function MapPicker({ point, onChange, onClose }) {
         });
         const marker = L.marker(latlng, { draggable: true, icon }).addTo(map);
         marker.on('dragend', () => movePin(marker.getLatLng()));
+        marker.on('click', () => movePin(marker.getLatLng()));
         markerRef.current = marker;
         ringsRef.current = [
-          L.circle(latlng, { radius: 1000, color: '#087f68', weight: 2, fillColor: '#087f68', fillOpacity: 0.055 }),
-          L.circle(latlng, { radius: 5000, color: '#747b78', weight: 1.5, dashArray: '6 7', fillColor: '#747b78', fillOpacity: 0.018 }),
+          L.circle(latlng, { radius: 1000, color: '#087f68', weight: 2, fillColor: '#087f68', fillOpacity: 0.055, interactive: false, className: 'sitefit-radius-ring' }),
+          L.circle(latlng, { radius: 5000, color: '#747b78', weight: 1.5, dashArray: '6 7', fillColor: '#747b78', fillOpacity: 0.018, interactive: false, className: 'sitefit-radius-ring' }),
         ];
         ringsRef.current.forEach(circle => circle.addTo(map));
       } else {
@@ -55,13 +78,15 @@ export default function MapPicker({ point, onChange, onClose }) {
         ringsRef.current.forEach(circle => circle.setLatLng(latlng));
       }
     };
-    const movePin = latlng => {
+    const movePin = raw => {
+      const latlng = toLatLng(raw);
+      if (!latlng) return;
       ensurePin(latlng);
-      onChange({ lat: latlng.lat, lon: latlng.lng });
+      onChangeRef.current?.({ lat: latlng.lat, lon: latlng.lng });
     };
     placePinRef.current = movePin;
 
-    if (point) ensurePin([initial.lat, initial.lon]);
+    if (point) ensurePin(point);
     map.on('click', event => movePin(event.latlng));
     mapRef.current = map;
     mapLayerRef.current = styleLayer;
@@ -78,12 +103,14 @@ export default function MapPicker({ point, onChange, onClose }) {
   useEffect(() => {
     if (!mapRef.current) return;
     if (point) {
-      const latlng = [point.lat, point.lon];
-      if (markerRef.current) {
-        markerRef.current.setLatLng(latlng);
-        ringsRef.current.forEach(circle => circle.setLatLng(latlng));
-      } else {
-        placePinRef.current?.({ lat: point.lat, lng: point.lon });
+      const latlng = toLatLng(point);
+      if (latlng) {
+        if (markerRef.current) {
+          markerRef.current.setLatLng(latlng);
+          ringsRef.current.forEach(circle => circle.setLatLng(latlng));
+        } else {
+          placePinRef.current?.(latlng);
+        }
       }
     } else if (markerRef.current) {
       mapRef.current.removeLayer(markerRef.current);
@@ -94,7 +121,12 @@ export default function MapPicker({ point, onChange, onClose }) {
   }, [point]);
 
   useEffect(() => {
-    if (theme !== 'bright') mapLayerRef.current?.getMaplibreMap().setStyle(MAP_STYLES[theme]);
+    if (prevThemeRef.current === theme) return;
+    prevThemeRef.current = theme;
+    const glMap = mapLayerRef.current?.getMaplibreMap();
+    if (glMap && MAP_STYLES[theme]) {
+      glMap.setStyle(MAP_STYLES[theme]);
+    }
   }, [theme]);
 
   const reset = () => {
@@ -126,7 +158,7 @@ export default function MapPicker({ point, onChange, onClose }) {
       </div>
     </div>
     <div className="map-picker-foot">
-      <small>{point ? `${point.lat.toFixed(5)}, ${point.lon.toFixed(5)}` : 'Choose a site on the map'}</small>
+      <small>{point && Number.isFinite(point.lat) && Number.isFinite(point.lon) ? `${point.lat.toFixed(5)}, ${point.lon.toFixed(5)}` : 'Choose a site on the map'}</small>
       <div><button className="button" onClick={reset}><RotateCcw size={14}/> Reset pin</button><button className="button button-dark" disabled={!point} onClick={onClose}><MapPin size={15}/> Use this location</button></div>
     </div>
   </section>;
