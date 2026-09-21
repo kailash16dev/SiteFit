@@ -13,9 +13,6 @@
 - **SerpApi’s role:** Retrieve structured Google Maps local results and account/quota information used to guard uncached searches.
 - **Hackathon information:** [SerpApi India Hackathon 2026](https://serpapi.github.io/serpapi-india-hackathon-2026/submit.html?utm_source=india_hackathon_26)
 - **Repository:** [kailash16dev/SiteFit](https://github.com/kailash16dev/SiteFit)
-- **Demo video / hosted demo:** Add links here when available.
-
-This README covers SiteFit’s positive impact, how it works, how to run it, and its SerpApi integration so reviewers can reproduce the project. Refer to the official hackathon page for the definitive eligibility, deadline, and submission requirements.
 
 ## What it does
 
