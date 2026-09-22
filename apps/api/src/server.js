@@ -3,14 +3,15 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { z } from 'zod';
 import { createHash } from 'node:crypto';
+import { createOriginChecker } from './cors.js';
 import { GROQ_MODEL, buildSummaryPrompt, parseSummaryContext, validateSummaryText } from './summary.js';
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
-const allowedOrigin = process.env.WEB_ORIGIN || 'http://localhost:5173';
+const isAllowedOrigin = createOriginChecker(process.env.WEB_ORIGIN);
 app.disable('x-powered-by');
 app.use(helmet());
-app.use(cors({ origin: allowedOrigin, methods: ['GET', 'POST'], allowedHeaders: ['Content-Type', 'X-Serpapi-Token', 'X-Groq-Api-Key'] }));
+app.use(cors({ origin: (origin, callback) => callback(null, isAllowedOrigin(origin) ? origin : false), methods: ['GET', 'POST'], allowedHeaders: ['Content-Type', 'X-Serpapi-Token', 'X-Groq-Api-Key'] }));
 app.use(express.json({ limit: '16kb' }));
 
 const tokenFrom = req => {

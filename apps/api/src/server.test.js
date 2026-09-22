@@ -19,11 +19,20 @@ async function waitForServer() {
 test('summary relay rejects missing credentials and malformed contexts before any Groq request', async t => {
   const server = spawn(process.execPath, ['server.js'], {
     cwd: new URL('.', import.meta.url).pathname,
-    env: { ...process.env, PORT: String(port), WEB_ORIGIN: 'http://localhost:5173' },
+    env: { ...process.env, PORT: String(port), WEB_ORIGIN: 'https://site-fit-web.vercel.app' },
     stdio: 'ignore'
   });
   t.after(() => server.kill());
   await waitForServer();
+
+  const productionCors = await fetch(`${base}/health`, { headers: { Origin: 'https://site-fit-web.vercel.app' } });
+  assert.equal(productionCors.headers.get('access-control-allow-origin'), 'https://site-fit-web.vercel.app');
+
+  const previewCors = await fetch(`${base}/health`, { headers: { Origin: 'https://site-fit-web-git-main-kailash16dev.vercel.app' } });
+  assert.equal(previewCors.headers.get('access-control-allow-origin'), 'https://site-fit-web-git-main-kailash16dev.vercel.app');
+
+  const unrelatedCors = await fetch(`${base}/health`, { headers: { Origin: 'https://another-project.vercel.app' } });
+  assert.equal(unrelatedCors.headers.get('access-control-allow-origin'), null);
 
   const missing = await fetch(`${base}/api/v1/summarize`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
   assert.equal(missing.status, 401);
