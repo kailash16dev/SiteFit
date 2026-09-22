@@ -290,6 +290,29 @@ body{font-size:14px;line-height:22px;letter-spacing:0;background:#f9f9f7;color:#
   .search-card{padding:28px 20px 24px}
   .sample-row{margin-top:30px}
 }
+
+/* Compact field treatment from the latest form reference. */
+.search-card .field-head{margin-bottom:10px}
+.search-card .field-label{font-size:14px;line-height:20px;font-weight:400;letter-spacing:0;color:var(--muted);text-transform:none}
+.search-card .field-meta{display:inline;font-size:13px;line-height:20px;color:#a0a09d;font-weight:400}
+.search-card .business-picker-trigger,.search-card .address-input{height:48px;border-radius:4px;font-size:16px}
+.search-card .business-picker-trigger{padding:0 14px}
+.search-card .address-input{padding:0 12px;gap:8px}
+.search-card .address-input input{font-size:16px}
+.search-card .form-section-divider{margin:28px 0 30px}
+.search-card .form-actions{flex-direction:row;align-items:center;gap:12px;margin-top:28px}
+.search-card .pin-button{height:48px;justify-content:center;padding:0 20px;border:1px solid var(--line-strong);background:#fff;color:var(--ink);font-size:16px;font-weight:400}
+.search-card .pin-button:hover:not(:disabled){background:#fcfcfb;border-color:#c9cbc8;color:var(--ink)}
+.search-card .analyze-button{width:184px;min-width:184px;height:48px;border-radius:4px;font-size:16px}
+.search-card .analyze-button:disabled{background:#efefed;border-color:#efefed;color:#aaa9a6;opacity:1}
+.search-card .token-hint{justify-content:flex-start;margin:28px 0 0;gap:9px;font-size:14px;line-height:22px}
+.search-card .token-hint>svg{color:#777976;flex:none}
+.search-card .token-hint button{display:inline-flex;align-items:center;gap:5px;text-decoration:none;font-weight:500}
+@media(max-width:700px){
+  .search-card .form-actions{align-items:stretch;flex-direction:column}
+  .search-card .pin-button,.search-card .analyze-button{width:100%}
+  .search-card .token-hint{font-size:12px;line-height:19px}
+}
 .settings-page .settings-key-label .field-label,.settings-page .get-key-link{font-size:16px;line-height:22px}
 .settings-page .token-input{height:54px}
 .settings-page .token-input input{font-size:15px;line-height:22px}
