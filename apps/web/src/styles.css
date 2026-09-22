@@ -218,6 +218,7 @@ body{background-color:#FAFAF8}
 .landing>.how-preview .text-arrow:hover{color:var(--ink)}
 .landing>.how-preview p{margin:10px auto 0;max-width:430px;color:#a0a4a1;font-size:11px;line-height:17px}
 @media(max-width:700px){.business-picker-menu{max-height:min(440px,65vh)}.business-picker-options{max-height:min(310px,48vh)}.proof-section{margin-top:46px;padding:36px 0 46px}.proof-heading h2{font-size:21px;line-height:28px}.proof-heading>p{font-size:11px}.proof-grid{grid-template-columns:1fr;gap:10px}.proof-grid article{min-height:0;padding:16px}.proof-icon{margin-bottom:2px}.address-field-wrap .geocode-results{left:0;right:0;top:calc(100% + 6px)}}
+.app-shell{font-family:"Google Sans","Google Sans Text",Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 .settings-privacy{align-items:center;gap:12px;padding:15px 16px;background:var(--soft)}
 .settings-privacy>span{width:34px;height:34px;border-radius:5px;background:#e8e8e6;color:#555a57}
 .settings-privacy>span svg{width:18px;height:18px}
