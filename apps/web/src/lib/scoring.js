@@ -181,3 +181,38 @@ export function scoreSparseReviewDriven(metrics, retailResponse, point) {
   if (retailCount === 0) reasons.push('Zero nearby retail is treated as one negative signal; it cannot alone produce an Untapped result.');
   return scored(score, 'sparseReviewComposite', reasons, 'limited', { retailCount, demandIndex: metrics.demandIndex, localCount: metrics.localCount, outerCount: metrics.outerCount });
 }
+
+// Anchor mappings are still being calibrated for some categories. Preserve a
+// useful directional result from independent review and supply evidence rather
+// than forcing every such site to the same midpoint. The result stays limited
+// confidence until category-specific anchors are verified.
+export function scoreUnverifiedAnchorFallback(metrics, retailResponse, point, category = null, anchorsResponse = null) {
+  const result = metrics.localCount <= 2
+    ? scoreSparseReviewDriven(metrics, retailResponse, point)
+    : scoreReviewDriven(metrics);
+  if (result.axis === 'provisional') return result;
+  const anchors = category?.anchors || [];
+  const responses = Array.isArray(anchorsResponse) ? anchorsResponse : [];
+  const competitorIds = new Set(metrics.localCompetitorIds || []);
+  const verifiedAnchors = anchors.map((anchor, index) => {
+    const response = responses[index];
+    const ids = new Set();
+    for (const place of response?.local_results || []) {
+      const lat = Number(place?.gps_coordinates?.latitude), lon = Number(place?.gps_coordinates?.longitude);
+      if (!place?.place_id || competitorIds.has(place.place_id) || !(place.type_ids || []).some(id => anchor.typeIds.includes(id)) ||
+        !Number.isFinite(lat) || !Number.isFinite(lon) || distanceMetres(point, { lat, lon }) > anchor.radius) continue;
+      ids.add(place.place_id);
+    }
+    return { anchor: { label: anchor.label, radius: anchor.radius }, count: ids.size, ratio: metrics.localCount ? ids.size / metrics.localCount : null };
+  });
+  return {
+    ...result,
+    confidence: 'limited',
+    axis: 'reviewFallback',
+    evidence: verifiedAnchors.length ? { ...result.evidence, anchors: verifiedAnchors } : result.evidence,
+    reasons: [
+      'Anchor type IDs are verified, but ratio thresholds are not calibrated yet; this directional result uses the anchor counts plus review-demand evidence.',
+      ...result.reasons
+    ]
+  };
+}

@@ -5,7 +5,7 @@ import LoadingScreen from './components/LoadingPage.jsx';
 import VerdictPage from './components/VerdictPage.jsx';
 import { CATEGORIES } from './lib/categories.js';
 import { apiPost, getGroqToken, getToken, GROQ_TOKEN_KEY, TOKEN_KEY } from './lib/api.js';
-import { buildRetailProbe, countNearbyPlaces, deriveMetrics, scoreAnchored, scoreReviewDriven, scoreSparseReviewDriven } from './lib/scoring.js';
+import { buildRetailProbe, countNearbyPlaces, deriveMetrics, scoreAnchored, scoreReviewDriven, scoreSparseReviewDriven, scoreUnverifiedAnchorFallback } from './lib/scoring.js';
 import { cachedSearchCount, readCachedSearch, writeCachedSearch } from './lib/cache.js';
 import { buildSummaryContext, isGroundedSummary, readCachedSummary, writeCachedSummary } from './lib/summary.js';
 
@@ -168,10 +168,10 @@ export default function App() {
       }
 
       const anchors = category.anchors || [];
-      const anchorsReady = category.driver === 'anchor' && anchors.length > 0 &&
-        anchors.every(anchor => anchor.typeIds?.length && Number.isFinite(anchor.sparseAt) && Number.isFinite(anchor.richAt));
+      const anchorQueriesReady = category.driver === 'anchor' && anchors.length > 0 && anchors.every(anchor => anchor.typeIds?.length);
+      const anchorsReady = anchorQueriesReady && anchors.every(anchor => Number.isFinite(anchor.sparseAt) && Number.isFinite(anchor.richAt));
 
-      if (!coreError && anchorsReady && (sparse || metrics.outerCount > 0)) {
+      if (!coreError && anchorQueriesReady && (sparse || metrics.outerCount > 0)) {
         setLoadingPhase('anchors');
         const anchorRequests = anchors.map(anchor => ({
           q: anchor.query, lat: point.lat, lon: point.lon, m: anchor.radius, hl: 'en', gl: 'in', type: 'search'
@@ -189,11 +189,7 @@ export default function App() {
         const retailCount = sparse ? countNearbyPlaces(retailResponse, point) : undefined;
         verdict = scoreAnchored(metrics, anchorResponses, category, point, { retailCount });
       } else {
-        verdict = scoreAnchored(metrics, null, category, point, { retailCount: sparse ? countNearbyPlaces(retailResponse, point) : undefined });
-        if (sparse && retailResponse && Array.isArray(retailResponse.local_results)) {
-          verdict.evidence.retailCount = countNearbyPlaces(retailResponse, point);
-          verdict.reasons.unshift('A retail-context check was run; category-specific demand anchors remain unverified, so the result stays provisional.');
-        }
+        verdict = scoreUnverifiedAnchorFallback(metrics, retailResponse, point, category, anchorResponses);
       }
 
       const combinedListings = [...baseline.local_results, ...local.local_results];

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CATEGORIES } from './categories.js';
-import { axisScore, buildRetailProbe, countNearbyPlaces, deriveMetrics, labelForScore, provisionalCompetitive, scoreAnchored, scoreReviewDriven, scoreSparseReviewDriven, selectAnalysisPath } from './scoring.js';
+import { axisScore, buildRetailProbe, countNearbyPlaces, deriveMetrics, labelForScore, provisionalCompetitive, scoreAnchored, scoreReviewDriven, scoreSparseReviewDriven, scoreUnverifiedAnchorFallback, selectAnalysisPath } from './scoring.js';
 
 const site = { lat: 0, lon: 0 };
 const place = (id, metres, reviews = 100, rating = 4.3, types = []) => ({
@@ -68,18 +68,37 @@ test('failed or unusable required data returns a provisional Competitive midpoin
   assert.equal(failed.score, 50);
 });
 
+test('unverified anchor categories use available review and supply evidence with limited confidence', () => {
+  const category = { anchors: [{ label: 'schools', radius: 2000, typeIds: ['school'] }] };
+  const anchorResponse = { local_results: [place('s1', 300, 10, 4, ['school']), place('s2', 500, 10, 4, ['school'])] };
+  const result = scoreUnverifiedAnchorFallback(metricsFor({ localReviews: 120, outerReviews: 100 }), null, site, category, [anchorResponse]);
+  assert.equal(result.label, 'Untapped');
+  assert.equal(result.confidence, 'limited');
+  assert.equal(result.axis, 'reviewFallback');
+  assert.match(result.reasons[0], /type IDs are verified/);
+  assert.equal(result.evidence.anchors[0].count, 2);
+
+  const sparse = scoreUnverifiedAnchorFallback(
+    metricsFor({ localCount: 2, localReviews: 300, outerReviews: 100 }),
+    { local_results: Array.from({ length: 4 }, (_, i) => place(`r${i}`, 100 + i * 100)) },
+    site
+  );
+  assert.equal(sparse.confidence, 'limited');
+  assert.notEqual(sparse.axis, 'provisional');
+});
+
 test('all twelve categories use the approved customer-anchor matrix', () => {
   assert.equal(CATEGORIES.length, 12);
   const expected = {
-    tuition: ['school', 'apartment'], preschool: ['apartment', 'office'],
-    stationery: ['school', 'coaching centre'], gym: ['apartment', 'office'],
-    salon: ['apartment', 'office'], grocery: ['apartment'],
-    pharmacy: ['clinic', 'apartment'], clinic: ['apartment'],
-    cafe: ['office', 'college'], restaurant: [], bakery: [], repair: []
+    tuition: ['school', 'apartment'], preschool: ['apartment', 'corporate office'],
+    stationery: ['school', 'coaching centre'], gym: ['apartment', 'corporate office'],
+    salon: ['apartment', 'corporate office'], grocery: ['apartment'],
+    pharmacy: ['hospital', 'apartment'], clinic: ['apartment'],
+    cafe: ['corporate office', 'college'], restaurant: [], bakery: [], repair: []
   };
   for (const category of CATEGORIES) {
     assert.deepEqual(category.anchors.map(anchor => anchor.query), expected[category.id]);
-    assert.ok(category.anchors.every(anchor => anchor.typeIds.length === 0 && anchor.sparseAt === null && anchor.richAt === null));
+    assert.ok(category.anchors.every(anchor => anchor.typeIds.length > 0 && anchor.sparseAt === null && anchor.richAt === null));
   }
 });
 
