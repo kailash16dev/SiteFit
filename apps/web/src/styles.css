@@ -278,6 +278,10 @@ body{font-size:14px;line-height:22px;letter-spacing:0;background:#f9f9f7;color:#
 .landing{max-width:812px}
 .hero{padding-top:45px}
 .hero h1{max-width:540px;font-size:48px;line-height:1.16;margin:27px auto 20px;white-space:normal}
+.typing-word{display:inline-block;width:0;overflow:hidden;white-space:nowrap;vertical-align:bottom;border-right:2px solid currentColor;animation:type-fits 1s steps(4,end) forwards,blink-caret .7s step-end 4}
+@keyframes type-fits{from{width:0}to{width:2.05em}}
+@keyframes blink-caret{0%,100%{border-color:transparent}50%{border-color:currentColor}}
+@media(prefers-reduced-motion:reduce){.typing-word{width:auto;overflow:visible;border-right:0;animation:none}}
 .hero-copy{max-width:620px;margin-bottom:38px;font-size:17px;line-height:1.65}
 .search-card{width:100%;max-width:760px;padding:36px 40px 28px}
 .search-card .form-section-divider{background:#f0f0ee}
