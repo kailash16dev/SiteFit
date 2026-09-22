@@ -54,6 +54,7 @@ export default function App() {
   const [results, setResults] = useState([]);
   const [geoBusy, setGeoBusy] = useState(false);
   const [geoError, setGeoError] = useState('');
+  const [typedHeadline, setTypedHeadline] = useState('');
   const category = useMemo(() => CATEGORIES.find(c => c.id === categoryId) || null, [categoryId]);
   const plannedSearchCount = category ? 3 + (category.anchors || []).filter(anchor => anchor.typeIds?.length && Number.isFinite(anchor.sparseAt) && Number.isFinite(anchor.richAt)).length : 0;
   const quotaValues = quotaSnapshot ? [quotaSnapshot.plan_searches_left, quotaSnapshot.hourly_searches_left].filter(Number.isFinite) : [];
@@ -65,6 +66,36 @@ export default function App() {
     };
     document.addEventListener('pointerdown', closeOnOutsideClick);
     return () => document.removeEventListener('pointerdown', closeOnOutsideClick);
+  }, []);
+
+  useEffect(() => {
+    const text = 'fits.';
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setTypedHeadline(text);
+      return undefined;
+    }
+    let index = 0;
+    let deleting = false;
+    let timer;
+    const tick = () => {
+      if (!deleting) {
+        index += 1;
+        setTypedHeadline(text.slice(0, index));
+        if (index === text.length) {
+          deleting = true;
+          timer = setTimeout(tick, 1100);
+        } else timer = setTimeout(tick, 135);
+      } else {
+        index -= 1;
+        setTypedHeadline(text.slice(0, index));
+        if (index === 0) {
+          deleting = false;
+          timer = setTimeout(tick, 450);
+        } else timer = setTimeout(tick, 90);
+      }
+    };
+    timer = setTimeout(tick, 350);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -233,7 +264,7 @@ export default function App() {
   return <div className="app-shell">
     <header className="topbar"><div className="topbar-inner"><button className="brand" onClick={() => setPage('home')} aria-label="SiteFit home"><span className="brand-mark" aria-hidden="true"><MapPinCheckInside size={23} strokeWidth={1.8}/></span><span className="brand-name">SiteFit</span><span className="brand-tagline">Know before you open.</span></button><nav><button className={`nav-link ${page === 'how' ? 'active' : ''}`} onClick={() => setPage('how')}>How it works</button><button className="icon-button settings-nav" onClick={() => setPage('settings')} aria-label="Settings"><SlidersHorizontal size={19}/></button></nav></div></header>
     {page === 'home' && <main className="landing">
-      <section className="hero"><h1>Find where your business <span className="typing-word" aria-label="fits">fits</span>.</h1><p className="hero-copy">Choose a business, select a location, and get an evidence-based view of demand, competition, and local activity.</p>
+      <section className="hero"><h1 aria-label="Find where your business fits.">Find where your business <span className="typing-group" aria-hidden="true"><span>{typedHeadline}</span><i/></span></h1><p className="hero-copy">Choose a business, select a location, and get an evidence-based view of demand, competition, and local activity.</p>
         <div className="search-card"><div className="field-head"><label className="field-label" id="business-type-label">Business type</label><span className="field-meta">Required</span></div><div className="business-picker" ref={businessPickerRef}><button id="business-type" type="button" className={`business-picker-trigger ${category ? 'has-value' : ''}`} onClick={() => setCategoryMenuOpen(open => !open)} onKeyDown={event => { if (event.key === 'Escape') setCategoryMenuOpen(false); if (event.key === 'ArrowDown') { event.preventDefault(); setCategoryMenuOpen(true); } }} aria-labelledby="business-type-label" aria-haspopup="listbox" aria-expanded={categoryMenuOpen}><span>{category?.label || 'Select a business category...'}</span><ChevronDown size={17} className={categoryMenuOpen ? 'is-open' : ''}/></button>{categoryMenuOpen && <div className="business-picker-menu" role="listbox" aria-labelledby="business-type-label"><div className="business-picker-menu-head"><span>Select feasibility model</span><span>{CATEGORIES.length} supported categories</span></div><div className="business-picker-options">{CATEGORIES.map(c => { const presentation = categoryPresentation[c.id] || { icon: Store, description: 'Local business and customer demand signals' }; const Icon = presentation.icon; const selected = categoryId === c.id; return <button key={c.id} type="button" role="option" aria-selected={selected} className={`business-picker-option ${selected ? 'selected' : ''}`} onClick={() => { setCategoryId(c.id); setCategoryMenuOpen(false); }}><span className="business-option-main"><span className="business-option-icon"><Icon size={17}/></span><span className="business-option-copy"><span>{c.label}</span><small>{presentation.description}</small></span></span>{selected && <Check size={17} className="business-option-check"/>}</button>; })}</div><div className="business-picker-menu-foot"><Landmark size={14}/><span>Benchmarked against local micro-catchments</span></div></div>}</div>
           <div className="search-divider form-section-divider"/><div className="field-head location-label"><label className="field-label" htmlFor="address">Location</label><span className="field-meta">Street or locality</span></div><div className="address-field-wrap"><div className="address-input"><button type="button" className="search-icon" aria-label="Search address" onClick={lookupAddress} disabled={!token || geoBusy}>{geoBusy ? <span className="mini-loader"/> : <Search size={18}/>}</button><input id="address" value={address} autoComplete="off" aria-controls="location-suggestions" aria-expanded={results.length > 0} onChange={e => { setAddress(e.target.value); setPoint(null); setPlaceLabel(''); setResults([]); setGeoError(''); }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); lookupAddress(); } }} placeholder="Search a locality or address"/></div>
           {results.length > 0 && <div className="geocode-results" id="location-suggestions" role="listbox" aria-label="Location suggestions"><div className="geocode-results-heading">Suggested locations</div>{results.map((r,i) => <button type="button" role="option" aria-selected="false" key={`${r.lat}-${i}`} onClick={() => chooseResult(r)}><MapPin size={16}/><span>{r.label}</span></button>)}</div>}</div>
