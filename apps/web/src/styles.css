@@ -278,7 +278,7 @@ body{font-size:14px;line-height:22px;letter-spacing:0;background:#f9f9f7;color:#
 .landing{max-width:812px}
 .hero{padding-top:45px}
 .hero h1{max-width:540px;font-size:48px;line-height:1.16;margin:27px auto 20px;white-space:normal}
-.typing-group{display:inline-flex;align-items:baseline;justify-content:flex-start;min-width:2.3em;white-space:nowrap;vertical-align:baseline}
+.typing-group{display:inline-flex;align-items:baseline;justify-content:flex-start;min-width:2.3em;white-space:nowrap;vertical-align:baseline;color:#087f68}
 .typing-group i{display:inline-block;width:2px;height:.92em;margin-left:2px;background:currentColor;animation:blink-caret .7s step-end infinite}
 @keyframes blink-caret{0%,100%{opacity:0}50%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.typing-group i{display:none}}
