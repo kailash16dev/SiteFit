@@ -70,7 +70,7 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
           iconSize: [28, 38],
           iconAnchor: [14, 34],
         });
-        const marker = L.marker(latlng, { draggable: true, icon }).addTo(map);
+        const marker = L.marker(latlng, { draggable: true, icon, zIndexOffset: 1000, riseOnHover: true }).addTo(map);
         marker.on('dragend', () => movePin(marker.getLatLng()));
         marker.on('click', () => movePin(marker.getLatLng()));
         markerRef.current = marker;
@@ -84,6 +84,7 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
         ringsRef.current.forEach(circle => circle.setLatLng(latlng));
       }
     };
+    ensurePinRef.current = ensurePin;
     const movePin = raw => {
       const latlng = toLatLng(raw);
       if (!latlng) return;
@@ -103,6 +104,7 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
       mapRef.current = null;
       mapLayerRef.current = null;
       placePinRef.current = null;
+      ensurePinRef.current = null;
     };
   }, []);
 
@@ -115,7 +117,8 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
           markerRef.current.setLatLng(latlng);
           ringsRef.current.forEach(circle => circle.setLatLng(latlng));
         } else {
-          placePinRef.current?.(latlng);
+          ensurePinRef.current?.(latlng);
+          mapRef.current.panTo(latlng, { animate: false });
         }
       }
     } else if (markerRef.current) {
