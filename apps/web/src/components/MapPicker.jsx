@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MapPin, RotateCcw, Sun, Moon, Crosshair } from 'lucide-react';
+import { MapPin, RotateCcw, Sun, Moon, Crosshair, X } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { maplibreGL } from '@maplibre/maplibre-gl-leaflet';
@@ -16,7 +16,7 @@ const MAP_STYLES = {
 };
 const MAP_ATTRIBUTION = '&copy; <a href="https://openfreemap.org/">OpenFreeMap</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
-export default function MapPicker({ point, onChange, onClose }) {
+export default function MapPicker({ point, placeLabel, onChange, onClose }) {
   const host = useRef(null);
   const mapRef = useRef(null);
   const markerRef = useRef(null);
@@ -29,6 +29,12 @@ export default function MapPicker({ point, onChange, onClose }) {
   const prevThemeRef = useRef(theme);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, []);
 
   const toLatLng = val => {
     if (!val) return null;
@@ -137,29 +143,29 @@ export default function MapPicker({ point, onChange, onClose }) {
     placePinRef.current?.({ lat: start.lat, lng: start.lon });
   };
 
-  return <section className="map-picker-card" aria-label="Map location picker">
-    <div className="map-picker-head">
-      <div className="map-picker-heading">
-        <div className="map-picker-title-row"><h2>Map location picker</h2><span className="map-heading-kicker">SPATIAL CALIBRATION</span></div>
-        <p>1 km local sample <span>•</span> 5 km comparison area</p>
+  const selectedLocation = placeLabel || (point && Number.isFinite(point.lat) && Number.isFinite(point.lon) ? `${point.lat.toFixed(5)}, ${point.lon.toFixed(5)}` : 'Choose a site on the map');
+  return <div className="map-picker-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="map-picker-card" role="dialog" aria-modal="true" aria-label="Choose a location">
+      <div className="map-picker-head">
+        <div className="map-picker-heading"><h2>Choose a location</h2><p>Drag the pin to your site</p></div>
+        <button className="map-picker-close" onClick={onClose} aria-label="Close location picker"><X size={22}/></button>
       </div>
-      <span className="map-precision-mode"><Crosshair size={14}/> Precision mode</span>
-    </div>
-    <div className={`map-stage ${theme}`}>
-      <div className="map-host" ref={host}/>
-      <div className="map-theme-toggle" role="group" aria-label="Map theme">
-        <button className={theme === 'bright' ? 'selected' : ''} onClick={() => setTheme('bright')}><Sun size={14}/> Bright</button>
-        <button className={theme === 'dark' ? 'selected' : ''} onClick={() => setTheme('dark')}><Moon size={14}/> Dark</button>
+      <div className={`map-stage ${theme}`}>
+        <div className="map-host" ref={host}/>
+        <div className="map-theme-toggle" role="group" aria-label="Map theme">
+          <button className={theme === 'bright' ? 'selected' : ''} onClick={() => setTheme('bright')}><Sun size={14}/> Bright</button>
+          <button className={theme === 'dark' ? 'selected' : ''} onClick={() => setTheme('dark')}><Moon size={14}/> Dark</button>
+        </div>
+        <div className="map-legend">
+          <div><i className="legend-pin"/>{point ? 'Selected site' : 'No pin selected'}</div>
+          <div><i className="legend-local"/>1 km local sample</div>
+          <div><i className="legend-comparison"/>5 km comparison area</div>
+        </div>
       </div>
-      <div className="map-legend">
-        <div><i className="legend-pin"/>{point ? 'Selected site' : 'No pin selected'}</div>
-        <div><i className="legend-local"/>1 km local sample</div>
-        <div><i className="legend-comparison"/>5 km comparison area</div>
+      <div className="map-picker-foot">
+        <div className="map-selected-location"><span>SELECTED LOCATION</span><strong>{selectedLocation}</strong></div>
+        <div><button className="button" onClick={onClose}>Cancel</button><button className="button button-dark" disabled={!point} onClick={onClose}><MapPin size={15}/> Use this location</button></div>
       </div>
-    </div>
-    <div className="map-picker-foot">
-      <small>{point && Number.isFinite(point.lat) && Number.isFinite(point.lon) ? `${point.lat.toFixed(5)}, ${point.lon.toFixed(5)}` : 'Choose a site on the map'}</small>
-      <div><button className="button" onClick={reset}><RotateCcw size={14}/> Reset pin</button><button className="button button-dark" disabled={!point} onClick={onClose}><MapPin size={15}/> Use this location</button></div>
-    </div>
-  </section>;
+    </section>
+  </div>;
 }

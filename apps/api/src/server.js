@@ -3,18 +3,23 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { z } from 'zod';
 import { createHash } from 'node:crypto';
+import { GROQ_MODEL, buildSummaryPrompt, parseSummaryContext, validateSummaryText } from './summary.js';
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
 const allowedOrigin = process.env.WEB_ORIGIN || 'http://localhost:5173';
 app.disable('x-powered-by');
 app.use(helmet());
-app.use(cors({ origin: allowedOrigin, methods: ['GET', 'POST'], allowedHeaders: ['Content-Type', 'X-Serpapi-Token'] }));
+app.use(cors({ origin: allowedOrigin, methods: ['GET', 'POST'], allowedHeaders: ['Content-Type', 'X-Serpapi-Token', 'X-Groq-Api-Key'] }));
 app.use(express.json({ limit: '16kb' }));
 
 const tokenFrom = req => {
   const token = req.get('X-Serpapi-Token')?.trim();
   return token && token.length <= 256 ? token : null;
+};
+const groqTokenFrom = req => {
+  const token = req.get('X-Groq-Api-Key')?.trim();
+  return token && token.length <= 512 ? token : null;
 };
 const fail = (res, status, code, message) => res.status(status).json({ error: { code, message } });
 const mapsSchema = z.object({
@@ -96,6 +101,36 @@ async function searchMapsAutocomplete(token, query, lat, lon) {
     lat: item.latitude,
     lon: item.longitude
   }));
+}
+
+async function summarizeWithGroq(token, context) {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages: [{ role: 'user', content: buildSummaryPrompt(context) }],
+      reasoning_effort: 'low',
+      max_tokens: 256,
+      temperature: 0.3
+    }),
+    signal: AbortSignal.timeout(12000)
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(payload?.error?.message || 'Groq could not write the explanation.');
+    error.status = response.status;
+    error.code = response.status === 401 ? 'INVALID_GROQ_TOKEN' : 'GROQ_UNAVAILABLE';
+    throw error;
+  }
+  const summary = validateSummaryText(payload?.choices?.[0]?.message?.content, context);
+  if (!summary) {
+    const error = new Error('Groq returned an explanation that could not be verified.');
+    error.status = 422;
+    error.code = 'INVALID_SUMMARY';
+    throw error;
+  }
+  return summary;
 }
 
 // Serialize scans using a one-way token fingerprint; never retain the raw key.
@@ -186,6 +221,18 @@ app.post('/api/v1/account', async (req, res) => {
     return res.json(await getAccount(token));
   } catch (error) {
     return fail(res, error.status || 502, error.code || 'UPSTREAM_UNAVAILABLE', error.message || 'Could not reach SerpApi. Try again.');
+  }
+});
+
+app.post('/api/v1/summarize', async (req, res) => {
+  const token = groqTokenFrom(req);
+  if (!token) return fail(res, 401, 'GROQ_TOKEN_REQUIRED', 'Add a Groq API key in Settings to generate an explanation.');
+  const context = parseSummaryContext(req.body);
+  if (!context) return fail(res, 400, 'INVALID_SUMMARY_CONTEXT', 'The verdict summary context is invalid.');
+  try {
+    return res.json({ summary: await summarizeWithGroq(token, context) });
+  } catch (error) {
+    return fail(res, error.status || 502, error.code || 'GROQ_UNAVAILABLE', error?.name === 'TimeoutError' ? 'Groq timed out while writing the explanation.' : error.message || 'Groq is temporarily unavailable.');
   }
 });
 

@@ -33,8 +33,8 @@ try {
   const loadingMarkup = renderToStaticMarkup(React.createElement(LoadingPage, {
     category: { label: 'Restaurant' }, placeLabel: 'Koramangala', phase: 'demand'
   }));
-  assert.match(loadingMarkup, /Checking the demand base/);
-  assert.match(loadingMarkup, /Running the sparse-supply retail check/);
+  assert.match(loadingMarkup, /Comparing demand signals/);
+  assert.match(loadingMarkup, /Checking local demand coverage/);
 
   const labels = [
     [makeScan(115, 100), 'Untapped'],
@@ -47,6 +47,7 @@ try {
     assert.match(markup, /<span class="verdict-score"><b>\d+<\/b> \/ 100<\/span>/);
     assert.match(markup, /Competitors nearby/);
     assert.match(markup, /Mock business/);
+    assert.doesNotMatch(markup, /MARKET READ/);
     assert.doesNotMatch(markup, /Confidence\s*\d+%/);
     assert.doesNotMatch(markup, /YES|MAYBE|\bNO\b/);
   }
@@ -57,9 +58,15 @@ try {
   };
   const provisionalMarkup = renderToStaticMarkup(React.createElement(VerdictPage, { scan: provisionalScan, onBack() {} }));
   assert.match(provisionalMarkup, /COMPETITIVE/);
-  assert.match(provisionalMarkup, /Limited confidence/);
-  assert.match(provisionalMarkup, /<span class="verdict-score"><b class="provisional-score">Provisional <\/b><b>50<\/b> \/ 100<\/span>/);
+  assert.doesNotMatch(provisionalMarkup, /Limited confidence/);
+  assert.doesNotMatch(provisionalMarkup, /Provisional\s*50\s*\/\s*100/);
   assert.doesNotMatch(provisionalMarkup, /NOT ENOUGH DATA/);
+  const loadingSummaryMarkup = renderToStaticMarkup(React.createElement(VerdictPage, { scan: { ...makeScan(100, 100), summaryStatus: 'loading' }, onBack() {} }));
+  assert.match(loadingSummaryMarkup, /MARKET READ/);
+  assert.match(loadingSummaryMarkup, /Writing explanation…/);
+  const readySummaryMarkup = renderToStaticMarkup(React.createElement(VerdictPage, { scan: { ...makeScan(100, 100), summaryStatus: 'ready', summary: 'Three nearby competitors make this market contested. The 1 review-demand index supports a careful approach.' }, onBack() {} }));
+  assert.match(readySummaryMarkup, /MARKET READ/);
+  assert.match(readySummaryMarkup, /Three nearby competitors make this market contested/);
   process.stdout.write('Mock SSR verified all three score labels, provisional Competitive evidence, the listing table, and demand loading step.\n');
 } finally {
   await vite.close();

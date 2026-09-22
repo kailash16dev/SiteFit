@@ -37,8 +37,8 @@ Every assessment shows the places and signals behind its **Untapped / Competitiv
 - **Business data and account limits:** SerpApi Google Maps and Account API
 - **Address suggestions:** SerpApi Google Maps Autocomplete API (`engine=google_maps_autocomplete`)
 - **Map tiles:** OpenFreeMap styles with OpenStreetMap data
-- **Persistence:** Browser localStorage for the user-entered key, search cache, and local scan metadata; no user account or application database
-- **AI:** No LLM is used. Verdicts are computed by deterministic, inspectable rules.
+- **Persistence:** Browser localStorage for user-entered keys, search cache, scan metadata, and validated optional summaries; no user account or application database
+- **Optional AI explanation:** Groq `openai/gpt-oss-20b` writes a two-sentence explanation from deterministic score context only. It never calculates or changes a verdict.
 
 The small Node.js relay keeps the SerpApi call out of the browser’s cross-origin path, validates requests, and checks the account’s plan and hourly search allowance before sending uncached Maps searches. It does not save the client token or search requests. Cached responses are stored on the browser and can avoid repeat API searches.
 
@@ -85,8 +85,8 @@ npm run build
 ## Privacy and key handling
 
 - Never commit a real SerpApi key or place it in frontend source.
-- The SerpApi key is entered in Settings, stored in browser localStorage, and sent in the request header only when the user requests a search.
-- The API relay does not save keys or search requests.
+- The SerpApi key is required for searches. An optional Groq key can generate a two-sentence verdict explanation; both are entered in Settings, stored in browser localStorage, and sent in request headers only when needed.
+- The API relay does not save keys, search requests, raw Maps results, or generated explanations.
 - SiteFit has no accounts, server-side search history, or database.
 - Clearing the browser cache removes locally cached search results. Clearing the token in Settings removes the browser-stored key.
 
@@ -98,11 +98,13 @@ flowchart LR
     ui -->|Choose location| maps[Leaflet map picker]
     maps -->|Map tiles and styles| ofm[OpenFreeMap<br/>OpenMapTiles + OSM]
     ui -->|SerpApi token + search request| relay[Node.js + Express API relay]
-    local[(Browser localStorage)] <-->|Token, cached searches, scan metadata| ui
+    ui -->|Optional Groq key + score context| relay
+    local[(Browser localStorage)] <-->|Keys, cached searches, scan metadata, summaries| ui
     relay -->|Account and quota check| account[SerpApi Account API]
     relay -->|Autocomplete and Maps searches| serp[SerpApi Google Maps APIs]
     account --> relay
     serp --> relay
+    relay -->|Optional validated summary| groq[Groq API]
     relay -->|Search results| ui
     ui -->|Deterministic scoring| result[Evidence-backed verdict<br/>Untapped / Competitive / Oversupplied]
 ```

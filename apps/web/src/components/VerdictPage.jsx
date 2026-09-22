@@ -31,15 +31,13 @@ export default function VerdictPage({ scan, onBack }) {
     <section className={`verdict-hero ${color}`} role="status" aria-live="polite">
       <div className="verdict-icon">{verdict.label === 'Untapped' ? '✓' : verdict.label === 'Oversupplied' ? '×' : '!'}</div>
       <div className="verdict-main">
-        <div className="verdict-meta"><span className="verdict-label">{verdict.label.toUpperCase()}</span><span className="verdict-score">{verdict.axis === 'provisional' && <b className="provisional-score">Provisional </b>}<b>{Math.round(verdict.score)}</b> / 100</span>{verdict.confidence === 'limited' && <span className="limited-badge">Limited confidence</span>}</div>
+        <div className="verdict-meta"><span className="verdict-label">{verdict.label.toUpperCase()}</span>{verdict.axis !== 'provisional' && <span className="verdict-score"><b>{Math.round(verdict.score)}</b> / 100</span>}</div>
         <h1>{headline}</h1>
         <p>{category.label} · {placeLabel || `${scan.point.lat.toFixed(4)}, ${scan.point.lon.toFixed(4)}`}</p>
       </div>
     </section>
-    <section className="evidence-section">
-      <div className="section-kicker">WHY THIS RESULT</div>
-      <ul className="reasons">{(verdict.reasons || []).map((reason, index) => <li key={index}>{reason}</li>)}</ul>
-    </section>
+    {scan.summaryStatus === 'loading' && <section className="evidence-section summary-pending" aria-live="polite"><div className="section-kicker">MARKET READ</div><p>Writing explanation…</p></section>}
+    {scan.summaryStatus === 'ready' && scan.summary && <section className="evidence-section ai-summary"><div className="section-kicker">MARKET READ</div><p>{scan.summary}</p></section>}
     <div className="metric-grid">{[
       ['Nearby competitors', metrics.localCount, 'usable business listings within 1 km'],
       ['Comparison sample', metrics.outerCount, 'usable business listings from 1–5 km'],
