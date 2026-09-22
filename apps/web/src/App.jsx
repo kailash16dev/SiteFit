@@ -248,7 +248,6 @@ export default function App() {
         {mapOpen && <Suspense fallback={<div className="map-picker-loading">Loading map…</div>}><MapPicker point={point} placeLabel={placeLabel} onChange={p => { setPoint(p); setPlaceLabel(p ? `Pinned site · ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}` : ''); }} onClose={() => setMapOpen(false)} /></Suspense>}
         <a className="how-anchor" href="#how-preview" onClick={e => {e.preventDefault(); setPage('how');}}><span>↓</span> See how it works</a>
       </section>
-      <section className="proof-section"><div className="proof-heading"><div className="section-kicker">EVALUATION ARCHITECTURE</div><h2>Evidence behind each result</h2><p>Every score is based on returned public listings, with missing evidence kept visible.</p></div><div className="proof-grid"><article><span className="proof-icon"><Store size={17}/></span><b>Competitor demand</b><p>Review-driven categories compare competitor review activity with a wider local sample.</p></article><article><span className="proof-icon"><Landmark size={17}/></span><b>Related-place anchors</b><p>Verified residences, schools, offices and related places indicate potential demand; unverified place types are not scored.</p></article><article><span className="proof-icon"><MapPin size={17}/></span><b>Sparse-supply check</b><p>With two or fewer competitors, retail context is combined with category demand evidence; zero retail alone cannot decide the result.</p></article></div></section>
       <HowPreview onOpen={() => setPage('how')}/>
     </main>}
     {page === 'how' && <HowPage onBack={() => setPage('home')} onStart={() => setPage('home')}/>}
@@ -259,7 +258,7 @@ export default function App() {
   </div>;
 }
 
-function HowPreview({ onOpen }) { return <section id="how-preview" className="how-preview"><div className="section-kicker">HOW IT WORKS</div><div className="steps-row">{[['01','Choose a business','Select a supported local business type.'],['02','Set your site','Search an address or place a pin.'],['03','Read the evidence','See a cautious verdict with its sources.']].map(([n,t,d])=><article key={n}><span>{n}</span><h3>{t}</h3><p>{d}</p></article>)}</div><button className="text-arrow" onClick={onOpen}>Read how SiteFit works <ArrowRight size={16}/></button></section>; }
+function HowPreview({ onOpen }) { return <section id="how-preview" className="how-preview"><button className="text-arrow" onClick={onOpen}>How it works <ArrowRight size={15}/></button><p>We combine public business and place signals around your chosen site to help you understand demand, competition and local activity.</p></section>; }
 function HowPage({ onBack, onStart }) {
   const steps = [
     { n: '01', icon: <Store size={17}/>, title: 'Pick a business', copy: 'Tell SiteFit what you want to open. Choose from a curated set of business categories we know how to evaluate.' },
