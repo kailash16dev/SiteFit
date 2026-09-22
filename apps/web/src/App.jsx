@@ -106,7 +106,7 @@ export default function App() {
       localStorage.setItem(cacheKey, JSON.stringify({ createdAt: Date.now(), results: suggestions }));
       if (requestId !== addressRequestRef.current) return;
       setResults(suggestions);
-      if (!suggestions.length) setGeoError('No Google Maps address suggestions found. You can choose a pin on the map.');
+      if (!suggestions.length) setGeoError('No Google Maps address suggestions found.');
     }
     catch (e) {
       if (requestId === addressRequestRef.current) { setGeoError(e.message); setResults([]); }
