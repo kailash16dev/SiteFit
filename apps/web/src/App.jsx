@@ -245,7 +245,7 @@ export default function App() {
           {notice && <div className="notice" role="alert">{notice} {notice.includes('Settings') && <button onClick={() => setPage('settings')}>Open Settings</button>}</div>}
         </div>
         <div className="sample-row"><span>TRY AN EXAMPLE</span>{samples.map(s => <button key={s.category} onClick={() => useSample(s)}>{s.text.replace(' near ', ' near ').replace(', Bengaluru', '')}</button>)}</div>
-        {mapOpen && <Suspense fallback={<div className="map-picker-loading">Loading map…</div>}><MapPicker point={point} placeLabel={placeLabel} onChange={p => { setPoint(p); setPlaceLabel(p ? `Pinned site · ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}` : ''); }} onClose={() => setMapOpen(false)} /></Suspense>}
+        {mapOpen && <Suspense fallback={<div className="map-picker-loading">Loading map…</div>}><MapPicker point={point} placeLabel={placeLabel} onChange={p => { setPoint(p); if (p) { const pinLabel = `Pinned site · ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}`; setAddress(pinLabel); setPlaceLabel(pinLabel); } else { setAddress(''); setPlaceLabel(''); } }} onClose={() => setMapOpen(false)} /></Suspense>}
         <a className="how-anchor" href="#how-preview" onClick={e => {e.preventDefault(); setPage('how');}}><span>↓</span> See how it works</a>
       </section>
       <HowPreview onOpen={() => setPage('how')}/>

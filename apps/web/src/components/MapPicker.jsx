@@ -58,6 +58,8 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
     startPointRef.current = { lat: initial.lat, lon: initial.lon };
     const map = L.map(host.current, { zoomControl: true, scrollWheelZoom: false, minZoom: 1 })
       .setView([initial.lat, initial.lon], 12);
+    const markerPane = map.createPane('sitefit-marker-pane');
+    markerPane.style.zIndex = '1000';
     const styleLayer = maplibreGL({ style: MAP_STYLES.bright }).addTo(map);
 
     const ensurePin = raw => {
@@ -70,7 +72,7 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
           iconSize: [28, 38],
           iconAnchor: [14, 34],
         });
-        const marker = L.marker(latlng, { draggable: true, icon, zIndexOffset: 1000, riseOnHover: true }).addTo(map);
+        const marker = L.marker(latlng, { draggable: true, icon, pane: 'sitefit-marker-pane', zIndexOffset: 1000, riseOnHover: true }).addTo(map);
         marker.on('dragend', () => movePin(marker.getLatLng()));
         marker.on('click', () => movePin(marker.getLatLng()));
         markerRef.current = marker;
@@ -97,6 +99,18 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
     map.on('click', event => movePin(event.latlng));
     mapRef.current = map;
     mapLayerRef.current = styleLayer;
+    if (!point && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          if (!mapRef.current) return;
+          const current = { lat: position.coords.latitude, lon: position.coords.longitude };
+          map.setView([current.lat, current.lon], 14, { animate: false });
+          movePin(current);
+        },
+        () => {},
+        { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 }
+      );
+    }
     requestAnimationFrame(() => map.invalidateSize());
 
     return () => {
