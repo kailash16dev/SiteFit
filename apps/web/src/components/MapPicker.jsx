@@ -25,6 +25,7 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
   const placePinRef = useRef(null);
   const ensurePinRef = useRef(null);
   const startPointRef = useRef(null);
+  const displayedPointRef = useRef(null);
   const [theme, setTheme] = useState('bright');
   const prevThemeRef = useRef(theme);
   const onChangeRef = useRef(onChange);
@@ -76,6 +77,7 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
         marker.on('dragend', () => movePin(marker.getLatLng()));
         marker.on('click', () => movePin(marker.getLatLng()));
         markerRef.current = marker;
+        displayedPointRef.current = { lat: latlng.lat, lon: latlng.lng };
         ringsRef.current = [
           L.circle(latlng, { radius: 1000, color: '#087f68', weight: 2, fillColor: '#087f68', fillOpacity: 0.055, interactive: false, className: 'sitefit-radius-ring' }),
           L.circle(latlng, { radius: 5000, color: '#747b78', weight: 1.5, dashArray: '6 7', fillColor: '#747b78', fillOpacity: 0.018, interactive: false, className: 'sitefit-radius-ring' }),
@@ -99,6 +101,7 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
     map.on('click', event => movePin(event.latlng));
     mapRef.current = map;
     mapLayerRef.current = styleLayer;
+    if (point) map.setView([point.lat, point.lon], 14, { animate: false });
     if (!point && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         position => {
@@ -119,6 +122,7 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
       mapLayerRef.current = null;
       placePinRef.current = null;
       ensurePinRef.current = null;
+      displayedPointRef.current = null;
     };
   }, []);
 
@@ -127,19 +131,22 @@ export default function MapPicker({ point, placeLabel, onChange, onClose }) {
     if (point) {
       const latlng = toLatLng(point);
       if (latlng) {
-        if (markerRef.current) {
-          markerRef.current.setLatLng(latlng);
-          ringsRef.current.forEach(circle => circle.setLatLng(latlng));
-        } else {
-          ensurePinRef.current?.(latlng);
-          mapRef.current.panTo(latlng, { animate: false });
-        }
+        const previous = displayedPointRef.current;
+        const changed = !previous || previous.lat !== latlng.lat || previous.lon !== latlng.lng;
+        ensurePinRef.current?.(latlng);
+        markerRef.current?.setLatLng(latlng);
+        markerRef.current?.setZIndexOffset(1000);
+        markerRef.current?.getElement()?.style.setProperty('display', 'block');
+        ringsRef.current.forEach(circle => circle.setLatLng(latlng));
+        displayedPointRef.current = { lat: latlng.lat, lon: latlng.lng };
+        if (changed) mapRef.current.setView(latlng, Math.max(mapRef.current.getZoom(), 14), { animate: false });
       }
     } else if (markerRef.current) {
       mapRef.current.removeLayer(markerRef.current);
       ringsRef.current.forEach(circle => mapRef.current.removeLayer(circle));
       markerRef.current = null;
       ringsRef.current = [];
+      displayedPointRef.current = null;
     }
   }, [point]);
 
