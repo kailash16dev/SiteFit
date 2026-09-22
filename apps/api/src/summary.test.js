@@ -20,6 +20,7 @@ test('summary context accepts only the supported deterministic contract', () => 
 
 test('summary validation permits grounded two-sentence plain text only', () => {
   assert.equal(validateSummaryText('Two nearby competitors make this market contested. The 1.1 review-demand index supports a careful approach.', context), 'Two nearby competitors make this market contested. The 1.1 review-demand index supports a careful approach.');
+  assert.equal(validateSummaryText('The score is 50/100 with limited confidence. Two nearby competitors were found.', context), 'The score is 50/100 with limited confidence. Two nearby competitors were found.');
   assert.equal(validateSummaryText('There are 12 nearby competitors. The market is contested.', context), null);
   assert.equal(validateSummaryText('- Market contested. - Review evidence is mixed.', context), null);
   assert.equal(validateSummaryText('Market contested.', context), null);

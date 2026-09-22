@@ -24,7 +24,7 @@ export function buildSummaryPrompt(context) {
 
 const numberKey = value => String(Number(value));
 export function allowedNumbers(context) {
-  return new Set((JSON.stringify(context).match(/\d+(?:\.\d+)?/g) || []).map(numberKey));
+  return new Set(['100', ...(JSON.stringify(context).match(/\d+(?:\.\d+)?/g) || [])].map(numberKey));
 }
 
 export function validateSummaryText(value, context) {

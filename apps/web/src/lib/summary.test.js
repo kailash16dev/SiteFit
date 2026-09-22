@@ -21,6 +21,7 @@ test('summary contexts contain deterministic score data, never raw listings', ()
 test('browser validation accepts grounded two sentences and rejects unsafe output', () => {
   const context = buildSummaryContext(scan);
   assert.equal(isGroundedSummary('Two nearby competitors make this market contested. The 1.12 review-demand index supports a careful approach.', context), true);
+  assert.equal(isGroundedSummary('The score is 50/100 with limited confidence. Two nearby competitors were found.', context), true);
   assert.equal(isGroundedSummary('12 competitors make this market contested. The evidence is mixed.', context), false);
   assert.equal(isGroundedSummary('**Market contested.** The evidence is mixed.', context), false);
   assert.equal(isGroundedSummary('Market contested.', context), false);

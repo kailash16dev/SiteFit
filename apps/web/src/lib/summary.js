@@ -69,6 +69,6 @@ export function isGroundedSummary(value, context) {
   if (!text || text.length > 500 || /[`*_#>[\]\r\n]|(^|\s)[•-]\s/.test(text)) return false;
   const endings = text.match(/[.!?](?=\s|$)/g) || [];
   if (endings.length !== 2 || !/[.!?]$/.test(text)) return false;
-  const allowed = new Set((JSON.stringify(context).match(/\d+(?:\.\d+)?/g) || []).map(numberKey));
+  const allowed = new Set(['100', ...(JSON.stringify(context).match(/\d+(?:\.\d+)?/g) || [])].map(numberKey));
   return (text.match(/\d+(?:\.\d+)?/g) || []).every(number => allowed.has(numberKey(number)));
 }
