@@ -273,6 +273,22 @@ body{font-size:14px;line-height:22px;letter-spacing:0;background:#f9f9f7;color:#
 .settings-card-heading{gap:12px}
 .settings-card-heading>p{font-size:14px;line-height:22px}
 .settings-key-field{gap:12px}
+
+/* Keep the start screen at the compact, centered Figma scale on desktop. */
+.landing{max-width:812px}
+.hero{padding-top:75px}
+.hero h1{max-width:540px;font-size:48px;line-height:1.16;margin:27px auto 20px;white-space:normal}
+.hero-copy{max-width:620px;margin-bottom:58px;font-size:17px;line-height:1.65}
+.search-card{width:100%;max-width:760px;padding:36px 40px 28px}
+.sample-row{max-width:760px;margin-top:28px}
+@media(max-width:700px){
+  .landing{max-width:100%}
+  .hero{padding-top:50px}
+  .hero h1{font-size:34px;line-height:42px;margin:23px auto 14px}
+  .hero-copy{font-size:14px;line-height:22px;margin-bottom:36px}
+  .search-card{padding:28px 20px 24px}
+  .sample-row{margin-top:30px}
+}
 .settings-page .settings-key-label .field-label,.settings-page .get-key-link{font-size:16px;line-height:22px}
 .settings-page .token-input{height:54px}
 .settings-page .token-input input{font-size:15px;line-height:22px}
