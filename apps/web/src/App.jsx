@@ -260,6 +260,9 @@ export default function App() {
 
 function HowPreview({ onOpen }) { return <section id="how-preview" className="how-preview"><button className="text-arrow" onClick={onOpen}>How it works <ArrowRight size={15}/></button><p>We combine public business and place signals around your chosen site to help you understand demand, competition and local activity.</p></section>; }
 function HowPage({ onBack, onStart }) {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
   const steps = [
     { n: '01', icon: <Store size={17}/>, title: 'Pick a business', copy: 'Tell SiteFit what you want to open. Choose from a curated set of business categories we know how to evaluate.' },
     { n: '02', icon: <Navigation size={17}/>, title: 'Choose the site', copy: 'Search for an address, area, or select a precise point on the map. Drag the pin to your exact site.' },
