@@ -4,16 +4,6 @@
 
 > SiteFit is a directional screening tool, not a revenue forecast, pedestrian counter, or guarantee of success. Review totals are lifetime platform activity, not customer counts.
 
-## Hackathon submission overview
-
-- **Project:** SiteFit
-- **One-line pitch:** Check a proposed shop location against live local business signals before signing a lease.
-- **Problem:** Independent business owners often lack affordable, understandable site-selection research. Enterprise location-intelligence products are generally designed for larger operators, while a manual map search makes it difficult to compare local supply and demand consistently.
-- **Approach:** Use SerpApi Google Maps results to compare competitors near a candidate site with a wider local sample. Show business-specific demand-anchor searches, distances, review counts, result coverage, and a transparent directional verdict. Do not infer a headcount from public place data.
-- **SerpApi’s role:** Retrieve structured Google Maps local results and account/quota information used to guard uncached searches.
-- **Hackathon information:** [SerpApi India Hackathon 2026](https://serpapi.github.io/serpapi-india-hackathon-2026/submit.html?utm_source=india_hackathon_26)
-- **Repository:** [kailash16dev/SiteFit](https://github.com/kailash16dev/SiteFit)
-
 ## What it does
 
 1. Select a supported business category and search for a locality or place a precise pin. Address suggestions come from SerpApi Google Maps Autocomplete and include selectable coordinates.
